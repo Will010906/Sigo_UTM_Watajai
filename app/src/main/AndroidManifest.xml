@@ -11,6 +11,63 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Sigo_UTM_Watajai">
+
+        <activity
+            android:name=".SubjectDetailActivity"
+            android:exported="true"
+            android:label="@string/title_activity_subject_detail"
+            android:theme="@style/Theme.Sigo_UTM_Watajai">
+        </activity>
+
+        <activity
+            android:name=".AcademicHistoryActivity"
+            android:exported="true"
+            android:label="@string/title_activity_academic_history"
+            android:theme="@style/Theme.Sigo_UTM_Watajai">
+        </activity>
+
+        <activity
+            android:name=".FamilyAddressActivity"
+            android:exported="true"
+            android:label="@string/title_activity_family_address"
+            android:theme="@style/Theme.Sigo_UTM_Watajai">
+        </activity>
+
+        <activity
+            android:name=".CurrentAddressActivity"
+            android:exported="true"
+            android:label="@string/title_activity_current_address"
+            android:theme="@style/Theme.Sigo_UTM_Watajai">
+        </activity>
+
+        <activity
+            android:name=".ContactInfoActivity"
+            android:exported="true"
+            android:label="@string/title_activity_contact_info"
+            android:theme="@style/Theme.Sigo_UTM_Watajai">
+        </activity>
+
+        <activity
+            android:name=".ProfileEditActivity"
+            android:exported="true"
+            android:label="@string/title_activity_personal_info"
+            android:theme="@style/Theme.Sigo_UTM_Watajai">
+        </activity>
+
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="true"
+            android:label="@string/title_activity_profile"
+            android:theme="@style/Theme.Sigo_UTM_Watajai">
+        </activity>
+
+        <activity
+            android:name=".HomeActivity"
+            android:exported="true"
+            android:label="@string/title_activity_home"
+            android:theme="@style/Theme.Sigo_UTM_Watajai">
+        </activity>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -18,7 +75,6 @@
             android:theme="@style/Theme.Sigo_UTM_Watajai">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

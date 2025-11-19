@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:background="@color/background_light"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/icon_sigo"
+        android:layout_width="97dp"
+        android:layout_height="46dp"
+        android:layout_marginTop="4dp"
+        android:contentDescription="@string/logo_sigo_desc"
+        android:src="@drawable/logo_sigo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/logo_utm"
+        android:layout_width="108dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="4dp"
+        android:contentDescription="@string/logo_utm_desc"
+        android:src="@drawable/logo_utm"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/et_usuario"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="160dp"
+        android:autofillHints="username"
+        android:background="@drawable/rounded_edittext_background"
+        android:drawableStart="@drawable/ic_person"
+        android:drawablePadding="8dp"
+        android:hint="@string/hint_usuario"
+        android:inputType="textEmailAddress"
+
+        android:maxWidth="320dp"
+        android:minHeight="48dp"
+        android:padding="12dp"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/logo_utm" />
+
+    <EditText
+        android:id="@+id/et_contrasena"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:autofillHints="password"
+        android:background="@drawable/rounded_edittext_background"
+        android:drawableStart="@drawable/ic_lock"
+        android:drawablePadding="8dp"
+        android:hint="@string/hint_contrasena"
+        android:inputType="textPassword"
+
+        android:maxWidth="320dp"
+        android:minHeight="48dp"
+        android:padding="12dp"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_usuario" />
+
+    <Button
+        android:id="@+id/btn_login"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/primary_color"
+        android:maxWidth="320dp"
+        android:minHeight="48dp"
+        android:text="@string/btn_iniciar_sesion"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_contrasena" />
+
+    <TextView
+        android:id="@+id/tv_olvidaste"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/olvidaste_contrasena"
+        android:textColor="@color/primary_color"
+        app:layout_constraintTop_toBottomOf="@+id/btn_login"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"
+        android:padding="8dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>
