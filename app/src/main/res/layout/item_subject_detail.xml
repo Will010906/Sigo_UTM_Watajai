@@ -89,7 +89,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginTop="16dp"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -99,12 +99,12 @@
                 android:textColor="#555555"
                 android:layout_marginBottom="8dp"/>
 
-            <TextView
-                android:id="@+id/tv_units_list"
-                android:layout_width="wrap_content"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_unidades_tematicas"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/units_list_placeholder" android:textSize="14sp"
-                android:textColor="@color/text_dark"/>
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                android:nestedScrollingEnabled="false" />
         </LinearLayout>
 
     </LinearLayout>

@@ -5,83 +5,167 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import android.view.LayoutInflater
+import android.view.View
+import androidx.activity.viewModels
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.sigo_utm_watajai.adapter.UnidadTematicaAdapter
+import com.example.sigo_utm_watajai.data.AppDatabase
+import com.example.sigo_utm_watajai.data.db.entity.Asignatura
+import com.example.sigo_utm_watajai.data.db.entity.UnidadTematica
+import com.example.sigo_utm_watajai.data.AsignaturaRepository
+import com.example.sigo_utm_watajai.viewmodel.SubjectDetailViewModel
+import com.example.sigo_utm_watajai.viewmodel.SubjectDetailViewModelFactory
 
+// ⭐ FUNCIÓN DE EXTENSIÓN PARA UN SOLO EVENTO ⭐
+/**
+ * Función de extensión para LiveData que observa un valor una sola vez.
+ * Es crucial en esta Activity para cargar las Unidades Temáticas de cada Asignatura
+ * sin mantener múltiples observadores activos, mejorando la eficiencia.
+ */
+fun <T> LiveData<T>.observeOnce(owner: AppCompatActivity, observer: (T) -> Unit) {
+    observe(owner, object : Observer<T> {
+        override fun onChanged(value: T) {
+            // 1. Remueve el observador inmediatamente
+            removeObserver(this)
+            // 2. Ejecuta el código de manejo del valor
+            observer(value)
+        }
+    })
+}
+
+/**
+ * Activity que muestra el detalle de las asignaturas para un cuatrimestre seleccionado.
+ * Implementa una vista dinámica que carga y expande el detalle de las unidades temáticas.
+ */
 class SubjectDetailActivity : AppCompatActivity() {
+
+    // 1. Conexión a Room (Inicializaciones lazy para las dependencias MVVM)
+    private val database by lazy { AppDatabase.getDatabase(applicationContext) }
+    private val repository by lazy { AsignaturaRepository(database.asignaturaDao(), database.unidadTematicaDao()) }
+    private val viewModelFactory by lazy { SubjectDetailViewModelFactory(repository) }
+    private val viewModel: SubjectDetailViewModel by viewModels { viewModelFactory }
+
+    // Contenedor principal donde se añadirán dinámicamente las vistas de cada asignatura.
+    private lateinit var containerSubjects: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_subject_detail)
 
-        // 1. Obtener el nombre del cuatrimestre enviado desde AcademicHistoryActivity
+        containerSubjects = findViewById(R.id.container_subjects)
+
+        // Obtiene el nombre del cuatrimestre pasado desde la Activity anterior (AcademicHistoryActivity).
         val cuatrimestreNombre = intent.getStringExtra("CUATRIMESTRE_NOMBRE") ?: "Detalle"
 
-        // 2. Configurar la barra de herramientas y el título
         setupToolbar(cuatrimestreNombre)
-
-        // 3. Cargar y mostrar la lista de asignaturas para ese cuatrimestre
-        loadSubjects(cuatrimestreNombre)
+        observeAsignaturas(cuatrimestreNombre) // Inicia la carga de asignaturas.
     }
 
+    /**
+     * Configura la Toolbar y el título principal de la Activity.
+     */
     private fun setupToolbar(cuatrimestre: String) {
-        val toolbar = findViewById<android.view.View>(R.id.toolbar)
-        // Usamos el nombre del cuatrimestre para el título
+        val toolbar = findViewById<View>(R.id.toolbar)
         toolbar.findViewById<TextView>(R.id.tv_title).text = cuatrimestre
-
-        // El título "Asignaturas" también puede ser útil
         findViewById<TextView>(R.id.tv_cuatrimestre_title).text = "Asignaturas de $cuatrimestre"
-
         toolbar.findViewById<android.widget.ImageView>(R.id.btn_back).setOnClickListener {
             finish()
         }
     }
 
-    private fun loadSubjects(cuatrimestre: String) {
-        // En un proyecto real, aquí harías una llamada a la base de datos o API.
-        // Por ahora, usamos datos de prueba.
-        val container = findViewById<LinearLayout>(R.id.container_subjects)
-        val subjectsList = getSampleSubjects(cuatrimestre)
+    /**
+     * Observa la lista de asignaturas para el cuatrimestre seleccionado.
+     * Esta función se activa cuando el LiveData `asignaturas` del ViewModel emite un nuevo valor.
+     */
+    private fun observeAsignaturas(cuatrimestreNombre: String) {
+        // Notifica al ViewModel qué cuatrimestre debe consultar (dispara el switchMap).
+        viewModel.setNombreCuatrimestre(cuatrimestreNombre)
 
-        val inflater = LayoutInflater.from(this)
+        viewModel.asignaturas.observe(this) { asignaturas ->
+            // Limpia las vistas antiguas antes de redibujar.
+            containerSubjects.removeAllViews()
 
-        subjectsList.forEach { subject ->
-            // 4. Inflar el layout de la materia (item_subject_detail.xml)
-            val subjectView = inflater.inflate(R.layout.item_subject_detail, container, false)
+            if (asignaturas != null && asignaturas.isNotEmpty()) {
 
-            // 5. Llenar los datos de la materia
-            subjectView.findViewById<TextView>(R.id.tv_subject_name_combined).text = subject.name
-            subjectView.findViewById<TextView>(R.id.tv_teacher_name).text = subject.teacher
-            subjectView.findViewById<TextView>(R.id.tv_progress).text = subject.progress
-            subjectView.findViewById<TextView>(R.id.tv_evaluation).text = subject.evaluation
-            subjectView.findViewById<TextView>(R.id.tv_desempeno).text = subject.desempeno
-            subjectView.findViewById<TextView>(R.id.tv_units_list).text = subject.units.joinToString("\n")
+                // Itera sobre cada asignatura recibida de la DB.
+                asignaturas.forEach { asignatura ->
 
-            // 6. Añadir la vista al contenedor
-            container.addView(subjectView)
+                    // ⭐ LÓGICA DE CARGA ANIDADA: Usa observeOnce para obtener las unidades temáticas.
+                    // Solo consultamos la DB por las unidades una vez por cada asignatura.
+                    viewModel.obtenerUnidadesPorAsignatura(asignatura.nombre).observeOnce(this) { unidades ->
 
-            // TODO: Añadir lógica para expandir/contraer las unidades al tocar la flecha.
+                        // Llama al método para inflar la vista de la asignatura y sus unidades.
+                        inflateSubjectView(
+                            asignatura = asignatura,
+                            unidades = unidades ?: emptyList(),
+                            container = containerSubjects
+                        )
+                    }
+                }
+            } else {
+                // Muestra un mensaje si no hay datos.
+                val noDataView = TextView(this).apply { text = "No se encontraron asignaturas para este cuatrimestre." }
+                containerSubjects.addView(noDataView)
+            }
         }
     }
 
-    // Función de datos de prueba (Debería estar en una capa de datos separada en un proyecto real)
-    private fun getSampleSubjects(cuatrimestre: String): List<Subject> {
-        // En un proyecto real, esta lógica filtraría las materias por cuatrimestre
-        return listOf(
-            Subject("Inglés", "Lic. María Veronica Alvarez Ríos", "100%", "Ordinaria", "E",
-                listOf("Presentación Personal (Estratégico)", "Actividades Diarias y de Rutina (Estratégico)")),
-            Subject("Desarrollo Humano y Valores", "Lic. Laura Perez Pazos", "95%", "Ordinaria", "B",
-                listOf("Liderazgo (Avanzado)", "Ética Profesional (Avanzado)")),
-            Subject("Física Básica", "Dr. Juan Sánchez", "80%", "Ordinaria", "I",
-                listOf("Mecánica Clásica (Regular)", "Termodinámica (Insuficiente)"))
-        )
+    /**
+     * Infla y configura la vista de una asignatura, incluyendo el RecyclerView de sus unidades temáticas.
+     */
+    private fun inflateSubjectView(asignatura: Asignatura, unidades: List<UnidadTematica>, container: LinearLayout) {
+        val inflater = LayoutInflater.from(this)
+        // Infla el layout de la tarjeta de asignatura (item_subject_detail.xml)
+        val subjectView = inflater.inflate(R.layout.item_subject_detail, container, false)
+
+        // Referencias a las vistas del layout inflado
+        val tvSubjectHeader: TextView = subjectView.findViewById(R.id.tv_subject_name_combined)
+        // Contenedor que se expande/contrae para mostrar las unidades temáticas
+        val layoutUnits: LinearLayout = subjectView.findViewById(R.id.layout_units)
+
+        // 1. Llenar los datos principales
+        tvSubjectHeader.text = asignatura.nombre
+        subjectView.findViewById<TextView>(R.id.tv_teacher_name).text = asignatura.profesor
+        subjectView.findViewById<TextView>(R.id.tv_progress).text = asignatura.progreso
+        subjectView.findViewById<TextView>(R.id.tv_evaluation).text = asignatura.evaluacion
+        subjectView.findViewById<TextView>(R.id.tv_desempeno).text = asignatura.desempenoGeneral
+
+
+        // 2. ⭐ IMPLEMENTACIÓN DEL DESPLIEGUE (Expandable View) ⭐
+        tvSubjectHeader.setOnClickListener {
+            if (layoutUnits.visibility == View.GONE) {
+                // Mostrar contenido (Expande)
+                layoutUnits.visibility = View.VISIBLE
+                // Cambiar ícono a flecha hacia arriba
+                tvSubjectHeader.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    0, 0, R.drawable.ic_arrow_up, 0
+                )
+            } else {
+                // Ocultar contenido (Contrae)
+                layoutUnits.visibility = View.GONE
+                // Cambiar ícono a flecha hacia abajo
+                tvSubjectHeader.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    0, 0, R.drawable.ic_arrow_down, 0
+                )
+            }
+        }
+
+        // 3. ⭐ CONFIGURAR EL RECYCLERVIEW DE UNIDADES TEMÁTICAS ⭐
+        val recyclerViewUnidades: RecyclerView = subjectView.findViewById(R.id.recycler_unidades_tematicas)
+
+        // Crear y configurar el adaptador para la lista de unidades
+        val adapterUnidadesInterno = UnidadTematicaAdapter()
+        recyclerViewUnidades.adapter = adapterUnidadesInterno
+        // Se usa LinearLayoutManager para la disposición vertical de las unidades
+        recyclerViewUnidades.layoutManager = LinearLayoutManager(this)
+
+        // 4. Pasamos los datos de las unidades temáticas al adaptador interno
+        adapterUnidadesInterno.updateList(unidades)
+
+        // Finalmente, añade la vista completa de la asignatura al contenedor principal
+        container.addView(subjectView)
     }
 }
-
-// Modelo de datos para las asignaturas (puedes crear un archivo Subject.kt en el paquete model)
-data class Subject(
-    val name: String,
-    val teacher: String,
-    val progress: String,
-    val evaluation: String,
-    val desempeno: String,
-    val units: List<String>
-)

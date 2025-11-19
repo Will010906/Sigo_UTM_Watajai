@@ -1,0 +1,14 @@
+<resources>
+    <color name="black">#FFFEFE</color>
+    <color name="white">#1E1E1E</color>
+    <color name="primary_color">#BB86FC</color>
+    <color name="primary_dark_color">#3700B3</color>
+    <color name="accent_color">#03DAC6</color>
+    <color name="background_light">#121212</color>
+    <color name="text_dark">#FFFFFF</color>
+    <color name="highlight_red">#CF6679</color>
+    <color name="card_background_pink">#251A25</color>
+    <color name="card_background_blue">#1A2530</color>
+    <color name="text_secondary_dark">#C0C0C0</color>
+
+</resources>
